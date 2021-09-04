@@ -13,6 +13,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
       id: string,
       definition: Function | Object
     ): Function | Object | void {
+      // 判断第二个参数是否传递
       if (!definition) {
         return this.options[type + 's'][id]
       } else {

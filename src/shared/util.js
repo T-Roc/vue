@@ -14,7 +14,7 @@ export function isTrue (v: any): boolean %checks {
   return v === true
 }
 
-export function isFalse (v: any): boolean %checks {
+export function isFalse (v: any): boolefan %checks {
   return v === false
 }
 

@@ -33,6 +33,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // exposed util methods.
   // NOTE: these are not considered part of the public API - avoid relying on
   // them unless you are aware of the risk.
+  // 这些工具方法不视作全局API的一部分，除非你已经意识到了某些风险，否则不要去依赖他们
   Vue.util = {
     warn,
     extend,
@@ -40,11 +41,17 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     defineReactive
   }
 
+  // 静态方法
   Vue.set = set
   Vue.delete = del
   Vue.nextTick = nextTick
 
   Vue.options = Object.create(null)
+  // [
+  //   'component',
+  //   'directive',
+  //   'filter'
+  // ]
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
   })
@@ -53,10 +60,15 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue
 
+  // 注册全局组件 keep-alive
   extend(Vue.options.components, builtInComponents)
 
+  // 注册 Vue.use() 用来注册插件
   initUse(Vue)
+  // 注册 Vue.mixin 实现混入
   initMixin(Vue)
+  // 注册 Vue.extend 基于传入的 options 返回组件的一个构造函数
   initExtend(Vue)
+  // 注册 Vue.directive()、Vue.component()、Vue.filter()
   initAssetRegisters(Vue)
 }
