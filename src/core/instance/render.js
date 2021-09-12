@@ -80,6 +80,7 @@ export function renderMixin (Vue: Class<Component>) {
     // render self
     let vnode
     try {
+      // render (h => '') h函数就是vm.$createElement
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

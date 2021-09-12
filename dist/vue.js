@@ -788,7 +788,7 @@ var Dep = function Dep () {
   this.id = uid++;
   this.subs = [];
 };
-
+// 添加新的订阅者 watcher 对象
 Dep.prototype.addSub = function addSub (sub) {
   this.subs.push(sub);
 };
@@ -811,15 +811,19 @@ Dep.prototype.notify = function notify () {
   }
 };
 
+// the current target watcher being evaluated.
+// this is globally unique because there could be only one
+// watcher being evaluated at any time.
 Dep.target = null;
 var targetStack = [];
-
+// 入栈并将当前 watcher 赋值给 Dep.target
 function pushTarget (_target) {
   if (Dep.target) { targetStack.push(Dep.target); }
   Dep.target = _target;
 }
 
 function popTarget () {
+  // 出栈操作
   Dep.target = targetStack.pop();
 }
 
@@ -982,15 +986,19 @@ var observerState = {
 var Observer = function Observer (value) {
   this.value = value;
   this.dep = new Dep();
+  // 初始化实例的 vmCount 为0
   this.vmCount = 0;
+  // 将实例挂载到观察对象的__ob__属性
   def(value, '__ob__', this);
+  // 数组响应式处理
   if (Array.isArray(value)) {
     var augment = hasProto
       ? protoAugment
       : copyAugment;
-    augment(value, arrayMethods, arrayKeys);
-    this.observeArray(value);
+    augment(value, arrayMethods, arrayKeys); // 改写数组原型方法
+    this.observeArray(value); // 深度观察数组中的每一项
   } else {
+    // 遍历对象中的每一个属性，转换成 setter/getter
     this.walk(value);
   }
 };
@@ -1046,10 +1054,12 @@ function copyAugment (target, src, keys) {
  * or the existing observer if the value already has one.
  */
 function observe (value, asRootData) {
+  // 判断是否是对象
   if (!isObject(value) || value instanceof VNode) {
     return
   }
   var ob;
+  // 如果 value 有 ‘__ob__’ 属性，结束
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__;
   } else if (
@@ -1059,6 +1069,7 @@ function observe (value, asRootData) {
     Object.isExtensible(value) &&
     !value._isVue
   ) {
+    // 创建一个 Observer 对象
     ob = new Observer(value);
   }
   if (asRootData && ob) {
@@ -1075,29 +1086,45 @@ function defineReactive (
   key,
   val,
   customSetter,
-  shallow
+  shallow // 值为 true 是浅层监听，否则...深层监听
 ) {
+  // 创建一个依赖对象实例
   var dep = new Dep();
 
+  // 获取 obj 的属性描述符对象
+  // property = {
+  //   configurable: true
+  //   enumerable: true
+  //   value: "xxx"
+  //   writable: true
+  //   [[Prototype]]
+  // }
   var property = Object.getOwnPropertyDescriptor(obj, key);
   if (property && property.configurable === false) {
     return
   }
 
+  // 提供预定义的存取器函数
   // cater for pre-defined getter/setters
   var getter = property && property.get;
   var setter = property && property.set;
 
+  // 判断是够递归子对象，并将子对象的属性都转换成 getter/setters , 返回子观察对象
   var childOb = !shallow && observe(val);
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
+      // 如果预定义的 getter 存在则 value 等于 getter，返回子观察对象
+      // 否则直接赋予属性值
       var value = getter ? getter.call(obj) : val;
+      // 如果存在当前依赖目标，即 watcher 对象，则建立依赖
       if (Dep.target) {
         dep.depend();
+        // 如果子观察目标存在，建立自观察对象的依赖关系
         if (childOb) {
           childOb.dep.depend();
+          // 如果是数组，特殊处理收集数组对象依赖
           if (Array.isArray(value)) {
             dependArray(value);
           }
@@ -1106,7 +1133,10 @@ function defineReactive (
       return value
     },
     set: function reactiveSetter (newVal) {
+      // 如果设置了  getter 存在 则 value 等于 getter 调用的返回值
+      // 否则直接赋予属性值
       var value = getter ? getter.call(obj) : val;
+      // 如果新值等于旧值或者新值旧值为NaN则不执行
       /* eslint-disable no-self-compare */
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
@@ -1115,6 +1145,7 @@ function defineReactive (
       if ("development" !== 'production' && customSetter) {
         customSetter();
       }
+      // 如果没有 setter 直接返回
       if (setter) {
         setter.call(obj, newVal);
       } else {
@@ -2269,8 +2300,10 @@ function initEvents (vm) {
   vm._events = Object.create(null);
   vm._hasHookEvent = false;
   // init parent attached events
+  // 获取父元素上附加的事件
   var listeners = vm.$options._parentListeners;
   if (listeners) {
+    // 注册自定义事件
     updateComponentListeners(vm, listeners);
   }
 }
@@ -2495,6 +2528,7 @@ function initLifecycle (vm) {
 }
 
 function lifecycleMixin (Vue) {
+  // _update 方法的作用是把 VNode 渲染成真实的 DOM
   Vue.prototype._update = function (vnode, hydrating) {
     var vm = this;
     if (vm._isMounted) {
@@ -3173,6 +3207,7 @@ function proxy (target, sourceKey, key) {
 function initState (vm) {
   vm._watchers = [];
   var opts = vm.$options;
+  // initProps 转换为响应式并添加到 _props 中
   if (opts.props) { initProps(vm, opts.props); }
   if (opts.methods) { initMethods(vm, opts.methods); }
   if (opts.data) {
@@ -3384,12 +3419,14 @@ function initMethods (vm, methods) {
           vm
         );
       }
+      // 避免名称重叠
       if (props && hasOwn(props, key)) {
         warn(
           ("Method \"" + key + "\" has already been defined as a prop."),
           vm
         );
       }
+      // 不建议方法名称用 _ 或者 $
       if ((key in vm) && isReserved(key)) {
         warn(
           "Method \"" + key + "\" conflicts with an existing Vue instance method. " +
@@ -4302,6 +4339,7 @@ function renderMixin (Vue) {
     // render self
     var vnode;
     try {
+      // render (h => '') h函数就是vm.$createElement
       vnode = render.call(vm._renderProxy, vm.$createElement);
     } catch (e) {
       handleError(e, vm, "render");
@@ -4343,6 +4381,7 @@ function renderMixin (Vue) {
 var uid$1 = 0;
 
 function initMixin (Vue) {
+  // 给 Vue 原型新增 _init 方法
   Vue.prototype._init = function (options) {
     var vm = this;
     // a uid
@@ -4350,6 +4389,7 @@ function initMixin (Vue) {
 
     var startTag, endTag;
     /* istanbul ignore if */
+    // 开发环境下的性能检测
     if ("development" !== 'production' && config.performance && mark) {
       startTag = "vue-perf-start:" + (vm._uid);
       endTag = "vue-perf-end:" + (vm._uid);
@@ -4357,6 +4397,7 @@ function initMixin (Vue) {
     }
 
     // a flag to avoid this being observed
+    // 如果是 Vue 实例不需要被 Observed
     vm._isVue = true;
     // merge options
     if (options && options._isComponent) {
@@ -4377,8 +4418,13 @@ function initMixin (Vue) {
     }
     // expose real self
     vm._self = vm;
+    // vm 的生命周期相关变量的变化
+    // $children\$parent\$root\$refs
     initLifecycle(vm);
+    // vm 的事件监听初始化，父组件绑定在当前组件上的事情
     initEvents(vm);
+    // vm 的编译 render 初始化
+    // $slots/$scopedSlots/_c/$createElements
     initRender(vm);
     callHook(vm, 'beforeCreate');
     initInjections(vm); // resolve injections before data/props

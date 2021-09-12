@@ -48,6 +48,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
+  // initProps 转换为响应式并添加到 _props 中
   if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
@@ -259,12 +260,14 @@ function initMethods (vm: Component, methods: Object) {
           vm
         )
       }
+      // 避免名称重叠
       if (props && hasOwn(props, key)) {
         warn(
           `Method "${key}" has already been defined as a prop.`,
           vm
         )
       }
+      // 不建议方法名称用 _ 或者 $
       if ((key in vm) && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +

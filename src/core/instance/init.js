@@ -13,6 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
+  // 给 Vue 原型新增 _init 方法
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // a uid
@@ -20,6 +21,7 @@ export function initMixin (Vue: Class<Component>) {
 
     let startTag, endTag
     /* istanbul ignore if */
+    // 开发环境下的性能检测
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
@@ -27,6 +29,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 如果是 Vue 实例不需要被 Observed
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
@@ -49,8 +52,13 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // vm 的生命周期相关变量的变化
+    // $children\$parent\$root\$refs
     initLifecycle(vm)
+    // vm 的事件监听初始化，父组件绑定在当前组件上的事情
     initEvents(vm)
+    // vm 的编译 render 初始化
+    // $slots/$scopedSlots/_c/$createElements
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
