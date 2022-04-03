@@ -33,7 +33,7 @@ export const observerState = {
  * collect dependencies and dispatches updates.
  */
 export class Observer {
-  // 观测对象
+  // 观测对象 
   value: any;
   // 依赖对象
   dep: Dep;
@@ -67,7 +67,7 @@ export class Observer {
    */
   walk (obj: Object) {
     const keys = Object.keys(obj)
-    for (let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) { 
       defineReactive(obj, keys[i], obj[keys[i]])
     }
   }
